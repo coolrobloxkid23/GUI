@@ -1,143 +1,125 @@
+-- // Roblox Admin Panel UI by coolrobloxkid23
+
 -- Services
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local uptime = 0
+local flyToggle, noclipToggle, godToggle = false, false, false
 
 -- UI Creation
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "AdminPanel"
 
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Frame.Size = UDim2.new(0, 400, 0, 300)
-Frame.Position = UDim2.new(0.5, -200, 0.5, -150)
+Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Frame.Size = UDim2.new(0,500,0,300)
+Frame.Position = UDim2.new(0.3,0,0.3,0)
+Frame.BorderSizePixel = 0
 Frame.Active = true
 Frame.Draggable = true
 
+-- Close Button
 local Close = Instance.new("TextButton", Frame)
+Close.Size = UDim2.new(0,25,0,25)
+Close.Position = UDim2.new(1,-30,0,5)
 Close.Text = "X"
-Close.Size = UDim2.new(0, 25, 0, 25)
-Close.Position = UDim2.new(1, -30, 0, 5)
-Close.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+Close.BackgroundColor3 = Color3.fromRGB(170,0,0)
 Close.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
+	ScreenGui.Enabled = false
 end)
 
-local Minimize = Instance.new("TextButton", Frame)
-Minimize.Text = "-"
-Minimize.Size = UDim2.new(0, 25, 0, 25)
-Minimize.Position = UDim2.new(1, -60, 0, 5)
-Minimize.BackgroundColor3 = Color3.fromRGB(255, 255, 50)
-local minimized = false
-Minimize.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	for _, child in ipairs(Frame:GetChildren()) do
-		if child ~= Close and child ~= Minimize then
-			child.Visible = not minimized
-		end
-	end
-	Frame.Size = minimized and UDim2.new(0, 400, 0, 35) or UDim2.new(0, 400, 0, 300)
-end)
-
+-- Title
 local Title = Instance.new("TextLabel", Frame)
-Title.Text = "Welcome Back, " .. LocalPlayer.Name
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Size = UDim2.new(1,0,0,30)
+Title.Position = UDim2.new(0,5,0,5)
+Title.Text = "Hello, "..player.Name.."!"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
 Title.BackgroundTransparency = 1
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Info Text
-local Info = Instance.new("TextLabel", Frame)
-Info.Size = UDim2.new(1, 0, 0, 100)
-Info.Position = UDim2.new(0, 0, 0, 40)
-Info.BackgroundTransparency = 1
-Info.TextColor3 = Color3.fromRGB(255, 255, 255)
-Info.Font = Enum.Font.Gotham
-Info.TextSize = 14
-Info.TextWrapped = true
-Info.Text = "Players: Loading...\nFavorites: Loading...\nServer Age: Loading..."
-
--- Update Info
-task.spawn(function()
-	while true do
-		local favorites = "Unavailable"
-		local success, result = pcall(function()
-			local response = HttpService:GetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId)
-			local data = HttpService:JSONDecode(response)
-			return data.data[1].favoritedCount
-		end)
-		if success then
-			favorites = result
-		end
-
-		Info.Text = string.format("Players: %d\nFavorites: %s\nServer Age: %d mins",
-			#Players:GetPlayers(),
-			favorites,
-			math.floor(workspace.DistributedGameTime / 60)
-		)
-		task.wait(5)
-	end
-end)
-
--- Feature Functions
-local function toggleFly()
-	-- Implement fly functionality here
-end
-
-local function clickTeleport()
-	-- Implement click teleport functionality here
-end
-
-local function toggleGodMode()
-	-- Implement god mode functionality here
-end
-
-local function toggleNoclip()
-	-- Implement noclip functionality here
-end
-
-local function toggleSpeed()
-	-- Implement speed functionality here
-end
-
--- Buttons and Hotkeys
-local features = {
-	{ name = "Fly", func = toggleFly, key = Enum.KeyCode.F },
-	{ name = "Click Teleport", func = clickTeleport, key = Enum.KeyCode.T },
-	{ name = "God Mode", func = toggleGodMode, key = Enum.KeyCode.G },
-	{ name = "Noclip", func = toggleNoclip, key = Enum.KeyCode.N },
-	{ name = "Speed 50", func = toggleSpeed, key = Enum.KeyCode.H },
+-- Stats
+local Stats = {
+	"👥 Players: "..#Players:GetPlayers(),
+	"👩‍💻 Scripters: You",
+	"⏱️ Uptime: "..uptime.."s",
+	"📍 Location: "..game.JobId ~= "" and "Unknown Server" or "Studio"
 }
 
-local yPos = 150
-for _, feature in ipairs(features) do
-	local button = Instance.new("TextButton", Frame)
-	button.Text = feature.name
-	button.Size = UDim2.new(0, 120, 0, 25)
-	button.Position = UDim2.new(0, 10, 0, yPos)
-	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	button.TextColor3 = Color3.fromRGB(255, 255, 255)
-	button.MouseButton1Click:Connect(feature.func)
-	yPos = yPos + 30
-
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if not gameProcessed and input.KeyCode == feature.key then
-			feature.func()
-		end
-	end)
+local statLabels = {}
+for i,v in pairs(Stats) do
+	local Label = Instance.new("TextLabel", Frame)
+	Label.Size = UDim2.new(0,220,0,25)
+	Label.Position = UDim2.new(0,10,0,30 + (i*30))
+	Label.Text = v
+	Label.TextColor3 = Color3.fromRGB(255,255,255)
+	Label.BackgroundTransparency = 1
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	statLabels[i] = Label
 end
 
--- UI Toggle
-local uiVisible = true
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
-		uiVisible = not uiVisible
-		ScreenGui.Enabled = uiVisible
+-- Commands
+local Commands = {
+	{"Fly (F)", function()
+		flyToggle = not flyToggle
+		if flyToggle then
+			local bp = Instance.new("BodyPosition", player.Character.HumanoidRootPart)
+			bp.Name = "FlyBP"
+			bp.MaxForce = Vector3.new(999999,999999,999999)
+			RunService.RenderStepped:Connect(function()
+				if flyToggle then
+					bp.Position = player.Character.HumanoidRootPart.Position + Vector3.new(0,2,0)
+				end
+			end)
+		else
+			if player.Character:FindFirstChild("HumanoidRootPart"):FindFirstChild("FlyBP") then
+				player.Character.HumanoidRootPart.FlyBP:Destroy()
+			end
+		end
+	end},
+
+	{"Invisible (I)", function()
+		player.Character:FindFirstChildWhichIsA("Humanoid").Name = "Invisible"
+	end},
+
+	{"Godmode (G)", function()
+		godToggle = not godToggle
+		if godToggle then
+			player.Character.Humanoid.Health = math.huge
+		end
+	end},
+
+	{"Speed 50 (J)", function()
+		player.Character.Humanoid.WalkSpeed = 50
+	end},
+
+	{"Jump 100 (K)", function()
+		player.Character.Humanoid.JumpPower = 100
+	end},
+}
+
+for i,v in pairs(Commands) do
+	local Btn = Instance.new("TextButton", Frame)
+	Btn.Size = UDim2.new(0,220,0,25)
+	Btn.Position = UDim2.new(0,260,0,30 + (i*30))
+	Btn.Text = v[1]
+	Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	Btn.TextColor3 = Color3.fromRGB(255,255,255)
+	Btn.MouseButton1Click:Connect(v[2])
+end
+
+-- Update UI every second
+while RunService.RenderStepped:Wait() do
+	uptime = uptime + 1
+	statLabels[1].Text = "👥 Players: "..#Players:GetPlayers()
+	statLabels[3].Text = "⏱️ Uptime: "..uptime.."s"
+end
+
+-- Toggle UI with RightShift
+mouse.KeyDown:Connect(function(key)
+	if key == string.char(29) then -- RightShift
+		ScreenGui.Enabled = not ScreenGui.Enabled
 	end
 end)
