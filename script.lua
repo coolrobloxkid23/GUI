@@ -1,6 +1,4 @@
--- // Roblox Admin Panel UI by coolrobloxkid23-- 
-
-
+-- UI Library (custom implementation)
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
@@ -8,7 +6,7 @@ local RunService = game:GetService("RunService")
 
 -- Create the ScreenGui
 local gui = Instance.new("ScreenGui")
-gui.Name = "CustomExploitGUI"
+gui.Name = "CoolRobloxKid23's GUI"
 gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -18,21 +16,41 @@ frame.Size = UDim2.new(0, 300, 0, 350)
 frame.Position = UDim2.new(0.5, -150, 0.5, -175)
 frame.BackgroundColor3 = Color3.fromRGB(30, 0, 60)
 frame.BorderColor3 = Color3.fromRGB(120, 0, 180)
+frame.Active = true
+frame.Draggable = true
 frame.Parent = gui
 
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 6)
 corner.Parent = frame
 
+-- Exit Button
+local exitBtn = Instance.new("TextButton")
+exitBtn.Size = UDim2.new(0, 30, 0, 30)
+exitBtn.Position = UDim2.new(1, -35, 0, 5)
+exitBtn.Text = "X"
+exitBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+exitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+exitBtn.Font = Enum.Font.SourceSansBold
+exitBtn.TextSize = 18
+exitBtn.Parent = frame
+exitBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
+title.Size = UDim2.new(1, -40, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "Custom GUI"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 22
+title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = frame
--- Variables for states
+
+-- Variables
 local flying = false
 local noclipping = false
 local godmode = false
@@ -72,7 +90,7 @@ speedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedSlider.Parent = frame
 
 speedSlider.MouseButton1Click:Connect(function()
-    speed = (speed + 50) % 250 -- Cycles through 0 → 50 → 100 → 150 → 200 → 0
+    speed = (speed + 50) % 250
     speedLabel.Text = "Speed: " .. tostring(speed)
 end)
 
@@ -132,7 +150,7 @@ tpDropdown.MouseButton1Click:Connect(function()
     end
 end)
 
--- Logic for fly and noclip movement
+-- Logic for fly, noclip, god mode
 RunService.RenderStepped:Connect(function()
     if flying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local moveDirection = Vector3.new()
@@ -140,7 +158,9 @@ RunService.RenderStepped:Connect(function()
         if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - workspace.CurrentCamera.CFrame.LookVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - workspace.CurrentCamera.CFrame.RightVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + workspace.CurrentCamera.CFrame.RightVector end
-        LocalPlayer.Character:TranslateBy(moveDirection.Unit * (speed / 60))
+        if moveDirection.Magnitude > 0 then
+            LocalPlayer.Character:TranslateBy(moveDirection.Unit * (speed / 60))
+        end
     end
 
     if noclipping and LocalPlayer.Character then
