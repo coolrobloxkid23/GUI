@@ -1,125 +1,159 @@
--- // Roblox Admin Panel UI by coolrobloxkid23
+-- // Roblox Admin Panel UI by coolrobloxkid23-- 
 
--- Services
+
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
-local uptime = 0
-local flyToggle, noclipToggle, godToggle = false, false, false
+-- Create the ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "CustomExploitGUI"
+gui.ResetOnSpawn = false
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- UI Creation
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "AdminPanel"
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 350)
+frame.Position = UDim2.new(0.5, -150, 0.5, -175)
+frame.BackgroundColor3 = Color3.fromRGB(30, 0, 60)
+frame.BorderColor3 = Color3.fromRGB(120, 0, 180)
+frame.Parent = gui
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-Frame.Size = UDim2.new(0,500,0,300)
-Frame.Position = UDim2.new(0.3,0,0.3,0)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 6)
+corner.Parent = frame
 
--- Close Button
-local Close = Instance.new("TextButton", Frame)
-Close.Size = UDim2.new(0,25,0,25)
-Close.Position = UDim2.new(1,-30,0,5)
-Close.Text = "X"
-Close.BackgroundColor3 = Color3.fromRGB(170,0,0)
-Close.MouseButton1Click:Connect(function()
-	ScreenGui.Enabled = false
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundTransparency = 1
+title.Text = "Custom GUI"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 22
+title.Parent = frame
+-- Variables for states
+local flying = false
+local noclipping = false
+local godmode = false
+local speed = 0
+
+-- Fly Button
+local flyToggle = Instance.new("TextButton")
+flyToggle.Size = UDim2.new(1, -20, 0, 30)
+flyToggle.Position = UDim2.new(0, 10, 0, 40)
+flyToggle.Text = "Fly"
+flyToggle.BackgroundColor3 = Color3.fromRGB(90, 0, 130)
+flyToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+flyToggle.Parent = frame
+
+flyToggle.MouseButton1Click:Connect(function()
+    flying = not flying
+    flyToggle.Text = flying and "Fly [ON]" or "Fly"
 end)
 
--- Title
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1,0,0,30)
-Title.Position = UDim2.new(0,5,0,5)
-Title.Text = "Hello, "..player.Name.."!"
-Title.TextColor3 = Color3.fromRGB(255,255,255)
-Title.BackgroundTransparency = 1
-Title.TextXAlignment = Enum.TextXAlignment.Left
+-- Speed Slider
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, -20, 0, 20)
+speedLabel.Position = UDim2.new(0, 10, 0, 80)
+speedLabel.Text = "Speed: 0"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextSize = 16
+speedLabel.Font = Enum.Font.SourceSans
+speedLabel.Parent = frame
 
--- Stats
-local Stats = {
-	"👥 Players: "..#Players:GetPlayers(),
-	"👩‍💻 Scripters: You",
-	"⏱️ Uptime: "..uptime.."s",
-	"📍 Location: "..game.JobId ~= "" and "Unknown Server" or "Studio"
-}
+local speedSlider = Instance.new("TextButton")
+speedSlider.Size = UDim2.new(1, -20, 0, 20)
+speedSlider.Position = UDim2.new(0, 10, 0, 100)
+speedSlider.Text = "Adjust Speed"
+speedSlider.BackgroundColor3 = Color3.fromRGB(120, 0, 180)
+speedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedSlider.Parent = frame
 
-local statLabels = {}
-for i,v in pairs(Stats) do
-	local Label = Instance.new("TextLabel", Frame)
-	Label.Size = UDim2.new(0,220,0,25)
-	Label.Position = UDim2.new(0,10,0,30 + (i*30))
-	Label.Text = v
-	Label.TextColor3 = Color3.fromRGB(255,255,255)
-	Label.BackgroundTransparency = 1
-	Label.TextXAlignment = Enum.TextXAlignment.Left
-	statLabels[i] = Label
-end
-
--- Commands
-local Commands = {
-	{"Fly (F)", function()
-		flyToggle = not flyToggle
-		if flyToggle then
-			local bp = Instance.new("BodyPosition", player.Character.HumanoidRootPart)
-			bp.Name = "FlyBP"
-			bp.MaxForce = Vector3.new(999999,999999,999999)
-			RunService.RenderStepped:Connect(function()
-				if flyToggle then
-					bp.Position = player.Character.HumanoidRootPart.Position + Vector3.new(0,2,0)
-				end
-			end)
-		else
-			if player.Character:FindFirstChild("HumanoidRootPart"):FindFirstChild("FlyBP") then
-				player.Character.HumanoidRootPart.FlyBP:Destroy()
-			end
-		end
-	end},
-
-	{"Invisible (I)", function()
-		player.Character:FindFirstChildWhichIsA("Humanoid").Name = "Invisible"
-	end},
-
-	{"Godmode (G)", function()
-		godToggle = not godToggle
-		if godToggle then
-			player.Character.Humanoid.Health = math.huge
-		end
-	end},
-
-	{"Speed 50 (J)", function()
-		player.Character.Humanoid.WalkSpeed = 50
-	end},
-
-	{"Jump 100 (K)", function()
-		player.Character.Humanoid.JumpPower = 100
-	end},
-}
-
-for i,v in pairs(Commands) do
-	local Btn = Instance.new("TextButton", Frame)
-	Btn.Size = UDim2.new(0,220,0,25)
-	Btn.Position = UDim2.new(0,260,0,30 + (i*30))
-	Btn.Text = v[1]
-	Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	Btn.TextColor3 = Color3.fromRGB(255,255,255)
-	Btn.MouseButton1Click:Connect(v[2])
-end
-
--- Update UI every second
-while RunService.RenderStepped:Wait() do
-	uptime = uptime + 1
-	statLabels[1].Text = "👥 Players: "..#Players:GetPlayers()
-	statLabels[3].Text = "⏱️ Uptime: "..uptime.."s"
-end
-
--- Toggle UI with RightShift
-mouse.KeyDown:Connect(function(key)
-	if key == string.char(29) then -- RightShift
-		ScreenGui.Enabled = not ScreenGui.Enabled
-	end
+speedSlider.MouseButton1Click:Connect(function()
+    speed = (speed + 50) % 250 -- Cycles through 0 → 50 → 100 → 150 → 200 → 0
+    speedLabel.Text = "Speed: " .. tostring(speed)
 end)
+
+-- Noclip Button
+local noclipToggle = Instance.new("TextButton")
+noclipToggle.Size = UDim2.new(1, -20, 0, 30)
+noclipToggle.Position = UDim2.new(0, 10, 0, 130)
+noclipToggle.Text = "Noclip"
+noclipToggle.BackgroundColor3 = Color3.fromRGB(90, 0, 130)
+noclipToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipToggle.Parent = frame
+
+noclipToggle.MouseButton1Click:Connect(function()
+    noclipping = not noclipping
+    noclipToggle.Text = noclipping and "Noclip [ON]" or "Noclip"
+end)
+
+-- God Mode Button
+local godToggle = Instance.new("TextButton")
+godToggle.Size = UDim2.new(1, -20, 0, 30)
+godToggle.Position = UDim2.new(0, 10, 0, 170)
+godToggle.Text = "God Mode"
+godToggle.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+godToggle.TextColor3 = Color3.fromRGB(0, 0, 0)
+godToggle.Parent = frame
+
+godToggle.MouseButton1Click:Connect(function()
+    godmode = not godmode
+    godToggle.Text = godmode and "God Mode [ON]" or "God Mode"
+end)
+
+-- Teleport Dropdown
+local tpLabel = Instance.new("TextLabel")
+tpLabel.Size = UDim2.new(1, -20, 0, 20)
+tpLabel.Position = UDim2.new(0, 10, 0, 210)
+tpLabel.Text = "Teleport to:"
+tpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpLabel.BackgroundTransparency = 1
+tpLabel.TextSize = 16
+tpLabel.Font = Enum.Font.SourceSans
+tpLabel.Parent = frame
+
+local tpDropdown = Instance.new("TextButton")
+tpDropdown.Size = UDim2.new(1, -20, 0, 30)
+tpDropdown.Position = UDim2.new(0, 10, 0, 230)
+tpDropdown.Text = "Teleport to First Player"
+tpDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+tpDropdown.TextColor3 = Color3.fromRGB(0, 0, 0)
+tpDropdown.Parent = frame
+
+tpDropdown.MouseButton1Click:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character:MoveTo(player.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0))
+            break
+        end
+    end
+end)
+
+-- Logic for fly and noclip movement
+RunService.RenderStepped:Connect(function()
+    if flying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local moveDirection = Vector3.new()
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + workspace.CurrentCamera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - workspace.CurrentCamera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - workspace.CurrentCamera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + workspace.CurrentCamera.CFrame.RightVector end
+        LocalPlayer.Character:TranslateBy(moveDirection.Unit * (speed / 60))
+    end
+
+    if noclipping and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+
+    if godmode and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.Health = LocalPlayer.Character.Humanoid.MaxHealth
+    end
+end)
+
+print("GUI Loaded with functionality")
